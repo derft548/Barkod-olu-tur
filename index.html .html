@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Barkod & QR Kod Oluşturucu</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .app {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    select, input, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+    }
+    canvas, svg {
+      margin-top: 10px;
+      max-width: 100%;
+    }
+    .btn-group {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-direction: row;
+      justify-content: center;
+    }
+    .btn-group button {
+      flex: 1;
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-group button:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h2>QR & Barkod Oluştur</h2>
+    <select id="codeType">
+      <option value="qr">QR Kod</option>
+      <option value="barcode">Barkod (Code128)</option>
+    </select>
+    <input type="text" id="inputData" placeholder="Veri girin (metin, bağlantı, vs)">
+    <button onclick="generateCode()">Kodu Oluştur</button>
+
+    <div id="result">
+      <canvas id="qrCanvas" style="display: none;"></canvas>
+      <svg id="barcode" style="display: none;"></svg>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="downloadImage()">İndir</button>
+    </div>
+  </div>
+
+  <script>
+    function generateCode() {
+      const type = document.getElementById('codeType').value;
+      const data = document.getElementById('inputData').value;
+      const qrCanvas = document.getElementById('qrCanvas');
+      const barcode = document.getElementById('barcode');
+
+      if (!data.trim()) {
+        alert("Lütfen bir veri girin.");
+        return;
+      }
+
+      if (type === 'qr') {
+        barcode.style.display = 'none';
+        qrCanvas.style.display = 'block';
+        QRCode.toCanvas(qrCanvas, data, { width: 250 }, function (error) {
+          if (error) console.error(error);
+        });
+      } else {
+        qrCanvas.style.display = 'none';
+        barcode.style.display = 'block';
+        JsBarcode("#barcode", data, {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 2,
+          height: 100,
+          displayValue: true
+        });
+      }
+    }
+
+    function downloadImage() {
+      const type = document.getElementById('codeType').value;
+
+      if (type === 'qr') {
+        const canvas = document.getElementById('qrCanvas');
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'qrcode.png';
+        link.click();
+      } else {
+        const svg = document.getElementById('barcode');
+        const xml = new XMLSerializer().serializeToString(svg);
+        const svg64 = btoa(xml);
+        const b64Start = 'data:image/svg+xml;base64,';
+        const image64 = b64Start + svg64;
+
+        const link = document.createElement('a');
+        link.href = image64;
+        link.download = 'barcode.svg';
+        link.click();
+      }
+    }
+  </script>
+</body>
+</html>
